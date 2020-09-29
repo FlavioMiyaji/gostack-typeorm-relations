@@ -12,10 +12,23 @@ interface IRequest {
 
 @injectable()
 class CreateCustomerService {
-  constructor(private customersRepository: ICustomersRepository) {}
+  constructor(
+    @inject('CustomersRepository')
+    private customersRepository: ICustomersRepository,
+  ) {}
 
   public async execute({ name, email }: IRequest): Promise<Customer> {
-    // TODO
+    if (!name) {
+      throw new AppError('Name is a required field!', 422);
+    }
+    if (!email) {
+      throw new AppError('E-mail is a required field!', 422);
+    }
+    const found = await this.customersRepository.findByEmail(email);
+    if (found) {
+      throw new AppError('E-mail has aready been used!', 400);
+    }
+    return this.customersRepository.create({ name, email });
   }
 }
 
