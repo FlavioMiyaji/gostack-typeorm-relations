@@ -17,20 +17,14 @@ export default class RelateOrdersAndProducts1601350006731
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'order_id',
-            type: 'varchar',
-          },
-          {
-            name: 'product_id',
-            type: 'varchar',
-          },
-          {
             name: 'price',
             type: 'decimal',
+            precision: 10,
+            scale: 2,
           },
           {
             name: 'quantity',
-            type: 'decimal',
+            type: 'int',
           },
           {
             name: 'created_at',

@@ -31,37 +31,47 @@ class CreateOrderService {
   public async execute({ customer_id, products }: IRequest): Promise<Order> {
     const customer = await this.customersRepository.findById(customer_id);
     if (!customer) {
-      throw new AppError('Curtomer not found!', 400);
+      throw new AppError('Could not find any customer with the given id!', 400);
     }
     const foundProducts = await this.productsRepository.findAllById(products);
     if (!foundProducts || foundProducts.length !== products.length) {
-      throw new AppError('Products not found!', 400);
+      throw new AppError('Could not find all products with the given ids!');
     }
-    const list = [] as {
-      product_id: string;
-      price: number;
-      quantity: number;
-    }[];
-    products.forEach(({ id, quantity }) => {
-      const found = foundProducts.find(product => product.id === id);
-      if (!found) {
-        throw new AppError('Products not found!', 400);
-      }
-      if (found.quantity <= quantity) {
-        throw new AppError('Not enough availability balance!', 400);
-      }
-      list.push({
-        product_id: id,
-        price: found.price,
-        quantity,
-      });
-    });
-    await this.productsRepository.updateQuantity(
-      list.map(({ product_id, quantity }) => ({
-        id: product_id,
-        quantity,
-      })),
+    const existentIds = foundProducts.map(product => product.id);
+    const inexistentProducts = products.filter(
+      product => !existentIds.includes(product.id),
     );
+    if (inexistentProducts.length) {
+      throw new AppError(`Could not find product ${inexistentProducts[0].id}`);
+    }
+    const unavailableProducts = products.filter(product => {
+      const found = foundProducts.find(({ id }) => id === product.id);
+      if (!found) return true;
+      return found.quantity <= product.quantity;
+    });
+    if (unavailableProducts.length) {
+      const product = unavailableProducts[0];
+      throw new AppError(
+        `The quantity ${product.quantity} it not available for ${product.id}.`,
+      );
+    }
+    const list = products.map(product => {
+      const found = foundProducts.find(({ id }) => product.id === id);
+      return {
+        product_id: product.id,
+        price: found ? found.price : 0.0,
+        quantity: product.quantity,
+      };
+    });
+
+    const orderedProductsQuantity = products.map(product => {
+      const found = foundProducts.find(({ id }) => id === product.id);
+      return {
+        id: product.id,
+        quantity: !found ? 0 : found.quantity - product.quantity,
+      };
+    });
+    await this.productsRepository.updateQuantity(orderedProductsQuantity);
     return this.ordersRepository.create({
       customer,
       products: list,

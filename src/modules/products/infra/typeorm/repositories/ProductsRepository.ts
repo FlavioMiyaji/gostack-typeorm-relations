@@ -34,15 +34,14 @@ class ProductsRepository implements IProductsRepository {
   }
 
   public async findAllById(products: IFindProducts[]): Promise<Product[]> {
-    return this.ormRepository.findByIds(products.map(({ id }) => id));
+    const ids = products.map(product => product.id);
+    return this.ormRepository.find({ where: { id: In(ids) } });
   }
 
   public async updateQuantity(
     products: IUpdateProductsQuantityDTO[],
   ): Promise<Product[]> {
-    // TODO
-    console.log(products);
-    return [] as Product[];
+    return this.ormRepository.save(products);
   }
 }
 

@@ -9,19 +9,16 @@ export default class OrdersController {
     const { id } = request.body;
     const findOrder = container.resolve(FindOrderService);
     const order = await findOrder.execute({ id });
-    return response.status(200).json({
-      customer: order?.customer,
-      order_products: order?.order_products,
-    });
+    return response.status(200).json(order);
   }
 
   public async create(request: Request, response: Response): Promise<Response> {
     const { customer_id, products } = request.body;
     const createOrder = container.resolve(CreateOrderService);
-    const order = await createOrder.execute({ customer_id, products });
-    return response.status(200).json({
-      customer: order?.customer,
-      order_products: order?.order_products,
+    const order = await createOrder.execute({
+      customer_id,
+      products,
     });
+    return response.status(200).json(order);
   }
 }

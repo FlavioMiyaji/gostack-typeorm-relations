@@ -16,10 +16,6 @@ export default class CreateOrders1601349988716 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           {
-            name: 'customer_id',
-            type: 'varchar',
-          },
-          {
             name: 'created_at',
             type: 'timestamp with time zone',
             default: 'now()',
